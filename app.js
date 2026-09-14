@@ -10,7 +10,6 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const fmt = n => Math.round(n).toLocaleString('uk-UA');
-  const dec = n => String(Math.round(n * 100) / 100).replace('.', ',');
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const icon = name => `<svg class="i"><use href="#i-${name}"/></svg>`;
   const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
@@ -29,6 +28,20 @@
   };
   const goods = n => plural(n, 'товар', 'товари', 'товарів');
 
+  /* ---------- варіанти товару (вага, фасування) ---------- */
+  const variantsOf = p => p.variants || [];
+  const variantOf = (p, vid) => variantsOf(p).find(v => v.id === vid) || variantsOf(p)[0];
+  const minPrice = p => Math.min(...variantsOf(p).map(v => v.price));
+  const keyOf = (p, v) => `${p.id}:${v.id}`;
+  // ключ кошика «товар:варіант» → { p, v }
+  const parseKey = key => {
+    const [pid, vid] = String(key).split(':');
+    const p = byId(pid);
+    if (!p) return null;
+    const v = vid ? variantsOf(p).find(x => x.id === vid) : variantsOf(p)[0];
+    return v ? { p, v } : null;
+  };
+
   /* ---------- найближча пʼятниця ---------- */
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -38,7 +51,7 @@
   const dayMonth = d => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
   $$('[data-friday]').forEach(el => { el.textContent = toFriday === 0 ? `сьогодні, ${dayMonth(friday)}` : `пʼятниця, ${dayMonth(friday)}`; });
   $$('[data-friday-date]').forEach(el => { el.textContent = dayMonth(friday); });
-  $$('[data-price-of]').forEach(el => { const p = byId(el.dataset.priceOf); if (p) el.textContent = fmt(p.price); });
+  $$('[data-price-of]').forEach(el => { const p = byId(el.dataset.priceOf); if (p) el.textContent = fmt(minPrice(p)); });
 
   /* ---------- бігучий рядок: дублюємо для безшовної прокрутки ---------- */
   const tickGroup = $('.ticker__group');
@@ -55,20 +68,29 @@
   /* ---------- кошик ---------- */
   let cart = store.get('ff-cart', {});
   if (!cart || typeof cart !== 'object' || Array.isArray(cart)) cart = {};
-  Object.keys(cart).forEach(id => { if (!byId(id) || !(cart[id] > 0)) delete cart[id]; });
+  // старі ключі без варіанта переводимо на перший варіант, неіснуючі прибираємо
+  Object.keys(cart).forEach(key => {
+    const q = cart[key];
+    const it = parseKey(key);
+    delete cart[key];
+    if (it && q > 0) {
+      const k = keyOf(it.p, it.v);
+      cart[k] = (cart[k] || 0) + q;
+    }
+  });
   let zone = store.get('ff-zone', 'dnipro');
   if (!ZONES[zone]) zone = 'dnipro';
 
-  const avgKg = p => (p.kg[0] + p.kg[1]) / 2;
-  const unitPrice = p => (p.kg ? p.price * avgKg(p) : p.price);
-  const subtotal = () => Object.keys(cart).reduce((s, id) => s + unitPrice(byId(id)) * cart[id], 0);
-  const hasApprox = () => Object.keys(cart).some(id => byId(id).kg);
+  const subtotal = () => Object.keys(cart).reduce((s, key) => {
+    const it = parseKey(key);
+    return s + (it ? it.v.price * cart[key] : 0);
+  }, 0);
   const feeFor = sub => (sub >= ZONES[zone].free ? 0 : ZONES[zone].fee);
   const hooks = [];
 
-  function setQty(id, q) {
-    if (q <= 0) delete cart[id];
-    else cart[id] = Math.min(q, 50);
+  function setQty(key, q) {
+    if (q <= 0) delete cart[key];
+    else cart[key] = Math.min(q, 50);
     store.set('ff-cart', cart);
     refresh();
   }
@@ -129,16 +151,19 @@
   }
 
   /* ---------- картки товарів ---------- */
-  const stepHtml = (id, q, unit) =>
+  const stepHtml = (key, q) =>
     `<div class="step step--sm">
-      <button type="button" data-act="dec" data-id="${id}" aria-label="Менше">${icon('minus')}</button>
-      <output>${q} ${unit}</output>
-      <button type="button" data-act="inc" data-id="${id}" aria-label="Більше">${icon('plus')}</button>
+      <button type="button" data-act="dec" data-id="${key}" aria-label="Менше">${icon('minus')}</button>
+      <output>${q} шт</output>
+      <button type="button" data-act="inc" data-id="${key}" aria-label="Більше">${icon('plus')}</button>
     </div>`;
   const phClass = p => (p.cat === 'ryba' ? 'ph' : 'ph ph--sea');
   const shot = (p, i) => (p.photos && p.photos[i]
     ? `<img src="${p.photos[i]}" alt="${p.name}"${i ? ' loading="lazy"' : ''}>`
     : '');
+  const priceHtml = p => (variantsOf(p).length > 1
+    ? `<small>від</small> ${fmt(minPrice(p))} <small>грн</small>`
+    : `${fmt(variantsOf(p)[0].price)} <small>грн · ${variantsOf(p)[0].label}</small>`);
 
   function card(p) {
     return `<article class="card">
@@ -147,18 +172,25 @@
         <h3>${p.name}</h3>
       </a>
       <p>${p.short}</p>
-      <div class="card__price">${fmt(p.price)} <small>грн/${p.per}</small></div>
+      <div class="card__price">${priceHtml(p)}</div>
       <div class="card__foot" data-foot="${p.id}"></div>
     </article>`;
   }
 
   function renderFoots() {
     $$('[data-foot]').forEach(foot => {
-      const id = foot.dataset.foot;
-      const q = cart[id] || 0;
+      const p = byId(foot.dataset.foot);
+      if (!p) return;
+      // кілька варіантів — вибір ваги на сторінці товару
+      if (variantsOf(p).length > 1) {
+        foot.innerHTML = `<a class="add" href="tovar.html?id=${p.id}">Вибрати ${icon('arrow')}</a>`;
+        return;
+      }
+      const key = keyOf(p, variantsOf(p)[0]);
+      const q = cart[key] || 0;
       foot.innerHTML = q
-        ? stepHtml(id, q, byId(id).unit)
-        : `<button type="button" class="add" data-act="inc" data-id="${id}">${icon('cart')}У кошик</button>`;
+        ? stepHtml(key, q)
+        : `<button type="button" class="add" data-act="inc" data-id="${key}">${icon('cart')}У кошик</button>`;
     });
   }
 
@@ -223,18 +255,32 @@
 
   /* ---------- сторінка товару ---------- */
   let current = null;
+  let currentVar = null;
   let buyQty = 1;
 
   function renderBuy() {
+    const v = currentVar;
+    if (!current || !v) return;
+    $$('[data-buy-qty]').forEach(el => { el.textContent = buyQty; });
+    $$('[data-buy-est]').forEach(el => { el.textContent = `${fmt(v.price * buyQty)} грн`; });
+    $$('[data-buy-sub]').forEach(el => { el.textContent = `${buyQty} шт × ${fmt(v.price)} грн`; });
+  }
+
+  function selectVariant(vid) {
     const p = current;
     if (!p) return;
-    $$('[data-buy-qty]').forEach(el => { el.textContent = buyQty; });
-    $$('[data-buy-est]').forEach(el => { el.textContent = `${p.kg ? '≈ ' : ''}${fmt(unitPrice(p) * buyQty)} грн`; });
-    $$('[data-buy-sub]').forEach(el => {
-      el.textContent = p.kg
-        ? `за ${buyQty} ${p.unit} ≈ ${dec(avgKg(p) * buyQty)} кг`
-        : `${buyQty} ${p.unit} × ${fmt(p.price)} грн`;
+    const v = variantOf(p, vid);
+    currentVar = v;
+    const many = variantsOf(p).length > 1;
+    $('#pPrice').textContent = fmt(v.price);
+    $('#pPer').textContent = many ? 'грн' : `грн · ${v.label}`;
+    $$('#pVariants [data-vid]').forEach(b => {
+      const on = b.dataset.vid === v.id;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-checked', String(on));
     });
+    $('#barName').innerHTML = `${esc(p.name)}<small>${esc(v.label)} · <span data-buy-est></span></small>`;
+    renderBuy();
   }
 
   function initProduct() {
@@ -249,25 +295,35 @@
     $$('.hdr__nav a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === `katalog.html?cat=${p.cat}`));
 
     $('#pTitle').textContent = p.title;
-    $('#pPrice').textContent = fmt(p.price);
-    $('#pPer').textContent = `грн/${p.per}`;
     $('#pWeekly').hidden = !p.weekly;
     const badge = $('#pBadge');
     badge.textContent = p.badge || '';
     badge.hidden = !p.badge;
     $('#pLead').textContent = p.lead;
     $('#pSpecs').innerHTML = p.specs.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
-    $('#pQtyLabel').textContent = p.qtyLabel;
+    $('#pQtyLabel').textContent = 'Кількість';
     const note = $('#pNote');
     note.textContent = p.note || '';
     note.hidden = !p.note;
     const perks = $('#pPerks');
     perks.innerHTML = (p.perks || []).map(([ic, t]) => `<div class="perk">${icon(ic)}${t}</div>`).join('');
     perks.hidden = !p.perks;
-    $('#barName').innerHTML = `${p.name}<small>${fmt(p.price)} грн/${p.per} · <span data-buy-est></span></small>`;
     $$('[data-extra]').forEach(el => { el.hidden = el.dataset.extra !== p.id; });
     const sim = $('#similar');
     if (sim) sim.innerHTML = PRODUCTS.filter(x => x.id !== p.id).map(card).join('');
+
+    // кнопки ваги / фасування
+    const box = $('#pVariantsBox');
+    if (box) {
+      const many = variantsOf(p).length > 1;
+      box.hidden = !many;
+      if (many) {
+        $('#pVarLabel').textContent = p.variantLabel || 'Вага';
+        $('#pVariants').innerHTML = variantsOf(p).map(v =>
+          `<button type="button" class="pill" data-act="variant" data-vid="${v.id}" role="radio" aria-checked="false">${esc(v.label)}</button>`).join('');
+      }
+    }
+    selectVariant(variantsOf(p)[0].id);
 
     // галерея
     const count = Math.max(1, (p.photos || []).length, (p.shots || []).length);
@@ -303,8 +359,6 @@
       thumbs.hidden = true;
       dots.hidden = true;
     }
-
-    renderBuy();
 
     // липка панель, коли кнопка покупки пішла за екран
     const bar = $('#bar');
@@ -548,10 +602,9 @@
 
   // орієнтовна вартість доставки Новою Поштою
   let npQuote = { key: '', cost: null, loading: false };
-  const cartWeight = () => Object.keys(cart).reduce((s, id) => {
-    const p = byId(id);
-    const q = cart[id];
-    return s + (p.kg ? avgKg(p) * q : p.unit === 'кг' ? q : (p.weightKg || 0.5) * q);
+  const cartWeight = () => Object.keys(cart).reduce((s, key) => {
+    const it = parseKey(key);
+    return s + (it ? (it.v.weight || 0.5) * cart[key] : 0);
   }, 1); // +1 кг на термопакування з охолоджувачами
 
   function refreshNpQuote() {
@@ -688,37 +741,37 @@
   function renderCart() {
     const list = $('#cartList');
     if (!list) return;
-    const ids = Object.keys(cart);
+    const keys = Object.keys(cart);
     const z = ZONES[zone];
     $('#orderDone').hidden = !done;
-    $('#cartEmpty').hidden = done || ids.length > 0;
-    $('#cartFilled').hidden = done || ids.length === 0;
+    $('#cartEmpty').hidden = done || keys.length > 0;
+    $('#cartFilled').hidden = done || keys.length === 0;
     if (done) return;
 
-    list.innerHTML = ids.map(id => {
-      const p = byId(id);
-      const q = cart[id];
+    list.innerHTML = keys.map(key => {
+      const it = parseKey(key);
+      if (!it) return '';
+      const q = cart[key];
       return `<li class="citem">
-        <a class="citem__info" href="tovar.html?id=${p.id}"><b>${p.name}</b><small>${fmt(p.price)} грн/${p.per}${p.kg ? ` · філе ${dec(p.kg[0])}–${dec(p.kg[1])} кг` : ''}</small></a>
-        ${stepHtml(id, q, p.unit)}
-        <div class="citem__sum">${p.kg ? '≈ ' : ''}${fmt(unitPrice(p) * q)} грн</div>
-        <button type="button" class="citem__x" data-act="remove" data-id="${id}" aria-label="Прибрати">${icon('close')}</button>
+        <a class="citem__info" href="tovar.html?id=${it.p.id}"><b>${it.p.name}</b><small>${it.v.label} · ${fmt(it.v.price)} грн</small></a>
+        ${stepHtml(key, q)}
+        <div class="citem__sum">${fmt(it.v.price * q)} грн</div>
+        <button type="button" class="citem__x" data-act="remove" data-id="${key}" aria-label="Прибрати">${icon('close')}</button>
       </li>`;
     }).join('');
 
     refreshNpQuote();
     const sub = subtotal();
     const fee = feeFor(sub);
-    const ap = hasApprox() ? '≈ ' : '';
     const np = isNp();
 
-    $('#sumCount').textContent = `Товари (${ids.length})`;
-    $('#sumGoods').textContent = `${ap}${fmt(sub)} грн`;
+    $('#sumCount').textContent = `Товари (${keys.length})`;
+    $('#sumGoods').textContent = `${fmt(sub)} грн`;
     $('#sumFeeName').textContent = z.feeName;
     $('#sumFee').textContent = fee ? `${fmt(fee)} грн` : 'безкоштовно';
     $('#sumNpRow').hidden = !np;
     if (np) $('#sumNp').textContent = npQuoteText();
-    const total = `${ap}${fmt(sub + fee)} грн`;
+    const total = `${fmt(sub + fee)} грн`;
     $('#sumTotal').textContent = total;
     const cobarTotal = $('#cobarTotal');
     if (cobarTotal) cobarTotal.textContent = total;
@@ -726,7 +779,6 @@
     const notes = [];
     if (np) notes.push('Доставку Нова Пошта рахує за своїм тарифом, оплачується при отриманні.');
     if (np && form.pay === 'cod') notes.push('За оплату при отриманні Нова Пошта бере комісію.');
-    if (hasApprox()) notes.push('Лосось продається за вагою — точну суму назвемо після зважування.');
     const note = $('#sumNote');
     note.textContent = notes.join(' ');
     note.hidden = !notes.length;
@@ -739,11 +791,11 @@
     });
 
     const warn = $('#cartWarn');
-    if (ids.length && sub < z.min) {
+    if (keys.length && sub < z.min) {
       warn.hidden = false;
       warn.classList.add('is-min');
       warn.textContent = `Мінімальне замовлення (${z.label}) — ${fmt(z.min)} грн. Додайте ще на ${fmt(z.min - sub)} грн.`;
-    } else if (ids.length && fee) {
+    } else if (keys.length && fee) {
       warn.hidden = false;
       warn.classList.remove('is-min');
       warn.textContent = `Ще ${fmt(z.free - sub)} грн — і ${zone === 'dnipro' ? 'доставка' : 'термопакування'} безкоштовно.`;
@@ -758,7 +810,7 @@
     const rules = [
       nameRule('fFirst', 'Вкажіть імʼя'),
       nameRule('fLast', 'Вкажіть прізвище'),
-      phoneRule('fPhone'),
+      phoneRule('fPhone')
     ];
     if (isOther()) {
       rules.push(nameRule('fRFirst', 'Вкажіть імʼя отримувача'), nameRule('fRLast', 'Вкажіть прізвище отримувача'), phoneRule('fRPhone'));
@@ -822,20 +874,19 @@
       branch: np ? val('fBranch') : '',
       branchRef: np ? form.npBranchRef || '' : '',
       npCost: np && npQuote.cost != null ? Math.round(npQuote.cost) : 0,
-      weight: np ? Math.ceil(cartWeight() * 2) / 2 : 0,
+      weight: Math.ceil(cartWeight() * 2) / 2,
       paymentId: pay.id || '',
       payment: pay.title || '',
       comment: val('fNote'),
       website: val('fWebsite'),
-      items: Object.keys(cart).map(id => {
-        const p = byId(id);
-        return { id, name: p.name, qty: cart[id], unit: p.unit, price: p.price, per: p.per, sum: Math.round(unitPrice(p) * cart[id]), approx: !!p.kg };
+      items: Object.keys(cart).map(key => {
+        const it = parseKey(key);
+        return { id: key, name: `${it.p.name}, ${it.v.label}`, qty: cart[key], unit: 'шт', price: it.v.price, sum: it.v.price * cart[key] };
       }),
       goods: Math.round(sub),
       feeName: z.feeName,
       fee,
-      total: Math.round(sub + fee),
-      approx: hasApprox()
+      total: Math.round(sub + fee)
     };
   }
 
@@ -901,15 +952,19 @@
     switch (t.dataset.act) {
       case 'buy-dec': buyQty = Math.max(1, buyQty - 1); renderBuy(); break;
       case 'buy-inc': buyQty = Math.min(20, buyQty + 1); renderBuy(); break;
-      case 'add-main':
-        if (!current) break;
-        setQty(current.id, (cart[current.id] || 0) + buyQty);
+      case 'variant': selectVariant(t.dataset.vid); break;
+      case 'add-main': {
+        if (!current || !currentVar) break;
+        const key = keyOf(current, currentVar);
+        setQty(key, (cart[key] || 0) + buyQty);
         location.href = 'koshyk.html';
         break;
+      }
       case 'inc': {
         const was = cart[id] || 0;
         setQty(id, was + 1);
-        if (!was) { bump(); toast(`${byId(id).name} — у кошику`, true); }
+        const it = parseKey(id);
+        if (!was && it) { bump(); toast(`${it.p.name} — у кошику`, true); }
         break;
       }
       case 'dec': setQty(id, (cart[id] || 0) - 1); break;

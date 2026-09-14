@@ -139,8 +139,8 @@ function testOrder() {
     id: 'TEST-1', name: 'Тестенко Тест', phone: '+380000000000',
     deliveryId: 'np_branch', delivery: 'Нова Пошта: відділення', city: 'м. Львів, Львівська обл.', branch: 'Відділення №1: вул. Городоцька, 359',
     payment: 'Передоплата за реквізитами ФОП', npCost: 148, gift: true,
-    items: [{ name: 'Філе лосося охолоджене', qty: 1, unit: 'філе', sum: 2044, approx: true }],
-    goods: 2044, fee: 0, feeName: 'Термопакування', total: 2044, approx: true, comment: 'перевірка'
+    items: [{ name: 'Філе лосося охолоджене, 1,5–1,7 кг', qty: 1, unit: 'шт', sum: 1870 }],
+    goods: 1870, fee: 0, feeName: 'Термопакування', total: 1870, comment: 'перевірка'
   }) } });
   console.log(res.getContent());
 }

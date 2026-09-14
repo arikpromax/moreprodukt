@@ -303,6 +303,10 @@ h2 { font-size: clamp(30px, 4.2vw, 48px); }
 .price__unit { font-weight: 600; font-size: 18px; color: var(--ink); }
 .price__tag { align-self: center; background: var(--salmon-l); color: var(--salmon-d); font-size: 13px; font-weight: 600; padding: 6px 10px; }
 .lead { margin: 16px 0 22px; font-size: 16.5px; }
+.variants { margin: 18px 0 0; }
+.variants .pill { min-width: 110px; }
+a.add { text-decoration: none; }
+.card__price small:first-child { margin-right: 2px; }
 .specs { display: grid; grid-template-columns: auto 1fr; margin: 0 0 24px; border-top: 1px solid var(--line); }
 .specs dt, .specs dd { margin: 0; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
 .specs dt { color: var(--muted); padding-right: 24px; }
@@ -710,8 +714,8 @@ body.cobar-on .toast { bottom: 90px; }
   .chip { flex: none; }
 
   .gal { margin-inline: -16px; }
-  .gal__thumbs { display: none; }
-  .gal__dots { display: flex; }
+  .gal__thumbs { gap: 8px; margin-top: 8px; padding-inline: 16px; }
+  .gal__dots { display: none; }
   .price__num { font-size: 50px; }
   .specs dt, .specs dd { font-size: 14.5px; }
   .buy { padding: 16px; }
