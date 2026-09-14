@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Кошик — Fish Family, Дніпро</title>
+<title>Оформлення замовлення — Fish Family, Дніпро</title>
 <meta name="description" content="Кошик Fish Family: зберіть замовлення й надішліть його в Direct.">
 <meta name="theme-color" content="#0E2233">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -69,8 +69,8 @@
 
 <section class="wrap cartpage">
   <div class="page-head">
-    <h1>Кошик</h1>
-    <p>Оформіть замовлення — ми звʼяжемося з вами, щоб підтвердити наявність і точну суму.</p>
+    <h1>Оформлення замовлення</h1>
+    <p>Заповніть контакти, доставку й оплату — ми звʼяжемося з вами, щоб підтвердити наявність і точну суму.</p>
   </div>
 
   <div class="cart__empty" id="cartEmpty" hidden>
@@ -85,47 +85,65 @@
     <a class="btn btn--main" href="index.html">На головну</a>
   </div>
 
-  <div class="cartgrid" id="cartFilled" hidden>
-    <div class="cartmain">
-      <ul class="citems" id="cartList"></ul>
+  <div class="cogrid" id="cartFilled" hidden>
+    <div class="comain">
+      <section class="costep">
+        <div class="costep__head">
+          <h2>Ваше замовлення</h2>
+          <a class="more" href="katalog.html">Додати товари <svg class="i"><use href="#i-arrow"/></svg></a>
+        </div>
+        <ul class="citems" id="cartList"></ul>
+      </section>
 
-      <h2 class="h3">Доставка</h2>
-      <div class="pills">
-          <button type="button" class="pill on" data-zone-pick="dnipro" aria-pressed="true">Дніпро</button>
-          <button type="button" class="pill" data-zone-pick="ukraine" aria-pressed="false">По Україні</button>
+      <section class="costep">
+        <h2><span>1</span>Контактні дані</h2>
+        <div class="fields">
+          <label class="field"><span>Прізвище</span><input id="fLast" data-f autocomplete="family-name"></label>
+          <label class="field"><span>Імʼя</span><input id="fFirst" data-f autocomplete="given-name"></label>
+          <label class="field field--wide"><span>Телефон</span><input id="fPhone" data-f type="tel" inputmode="tel" autocomplete="tel" placeholder="+380 __ ___ __ __"></label>
         </div>
+      </section>
 
-      <h2 class="h3">Контакти</h2>
-      <div class="fields">
-        <label class="field"><span>Імʼя</span><input id="fName" data-f autocomplete="name"></label>
-        <label class="field"><span>Телефон</span><input id="fPhone" data-f type="tel" inputmode="tel" autocomplete="tel" placeholder="+380"></label>
-        <label class="field field--wide" data-zone="dnipro"><span>Адреса доставки</span><input id="fAddr" data-f autocomplete="street-address" placeholder="Вулиця, будинок, квартира"></label>
-        <div class="field field--wide field--ac" data-zone="ukraine" hidden>
-          <label for="fCity">Місто</label>
-          <input id="fCity" data-f autocomplete="off" placeholder="Почніть вводити назву" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fCityList">
-          <ul class="ac" id="fCityList" role="listbox" hidden></ul>
+      <section class="costep">
+        <h2><span>2</span>Доставка</h2>
+        <div class="opts" id="deliveryOpts" role="radiogroup" aria-label="Спосіб доставки"></div>
+        <div class="fields">
+          <label class="field field--wide" data-dlv="courier"><span>Адреса доставки</span><input id="fAddr" data-f autocomplete="street-address" placeholder="Вулиця, будинок, квартира"></label>
+          <div class="field field--wide field--ac" data-dlv="np" hidden>
+            <label for="fCity">Місто</label>
+            <input id="fCity" data-f autocomplete="off" placeholder="Почніть вводити назву" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fCityList">
+            <ul class="ac" id="fCityList" role="listbox" hidden></ul>
+          </div>
+          <div class="field field--wide field--ac" data-dlv="np" hidden>
+            <label for="fBranch" id="fBranchLbl">Відділення Нової Пошти</label>
+            <input id="fBranch" data-f autocomplete="off" placeholder="Номер або адреса відділення" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fBranchList">
+            <ul class="ac" id="fBranchList" role="listbox" hidden></ul>
+          </div>
         </div>
-        <div class="field field--wide field--ac" data-zone="ukraine" hidden>
-          <label for="fBranch">Відділення або поштомат Нової Пошти</label>
-          <input id="fBranch" data-f autocomplete="off" placeholder="Номер або адреса відділення" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fBranchList">
-          <ul class="ac" id="fBranchList" role="listbox" hidden></ul>
+      </section>
+
+      <section class="costep">
+        <h2><span>3</span>Оплата</h2>
+        <div class="opts" id="payOpts" role="radiogroup" aria-label="Спосіб оплати"></div>
+        <div class="fields">
+          <label class="field field--wide"><span>Коментар до замовлення</span><textarea id="fNote" data-f rows="2"></textarea></label>
+          <input class="hp" id="fWebsite" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
         </div>
-        <label class="field field--wide"><span>Коментар</span><textarea id="fNote" data-f rows="2"></textarea></label>
-        <input class="hp" id="fWebsite" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      </div>
+      </section>
     </div>
 
-    <aside class="cartside">
+    <aside class="coside">
       <h2 class="h3">Разом</h2>
       <div class="sum">
-        <div><span>Товари</span><span id="sumGoods">0 грн</span></div>
+        <div><span id="sumCount">Товари</span><span id="sumGoods">0 грн</span></div>
         <div><span id="sumFeeName">Доставка</span><span id="sumFee">—</span></div>
-        <div class="total"><span>Разом</span><span id="sumTotal">0 грн</span></div>
+        <div id="sumNpRow" hidden><span>Нова Пошта</span><span id="sumNp">—</span></div>
+        <div class="total"><span>До сплати</span><span id="sumTotal">0 грн</span></div>
         <small id="sumNote" hidden></small>
       </div>
       <p class="warn" id="cartWarn" hidden></p>
-      <button type="button" class="btn btn--main btn--block" id="cartSend" data-act="send"><svg class="i"><use href="#i-check"/></svg><span id="cartSendTxt">Оформити замовлення</span></button>
-      <p class="cart__hint">Замовлення одразу надходить нам — ми звʼяжемося з вами для підтвердження.</p>
+      <button type="button" class="btn btn--main btn--block" id="cartSend" data-act="send"><svg class="i"><use href="#i-check"/></svg><span id="cartSendTxt">Підтвердити замовлення</span></button>
+      <p class="cart__hint">Підтверджуючи замовлення, ви погоджуєтесь на обробку персональних даних для доставки.</p>
       <p class="warn is-min" id="sendError" hidden>Не вдалося надіслати замовлення. Перевірте інтернет і спробуйте ще раз.</p>
     </aside>
   </div>

@@ -1,8 +1,10 @@
-/* Fish Family — спільна логіка всіх сторінок. Товари, категорії, доставка й налаштування — у data.js */
+/* Fish Family — спільна логіка всіх сторінок. Товари, доставка, оплата й налаштування — у data.js */
 (() => {
   'use strict';
 
   const CFG = typeof SHOP !== 'undefined' ? SHOP : {};
+  const DLV = typeof DELIVERY !== 'undefined' ? DELIVERY : [];
+  const PAY = typeof PAYMENTS !== 'undefined' ? PAYMENTS : { courier: [], np: [] };
   const MONTHS = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -316,8 +318,13 @@
     }
   }
 
-  /* ---------- Нова Пошта: місто й відділення зі списку ---------- */
+  /* ---------- Нова Пошта: місто, відділення, поштомат ---------- */
   const NP_URL = 'https://api.novaposhta.ua/v2.0/json/';
+  const NP_DNIPRO = 'db5c88f0-391c-11dd-90d9-001a92567626';
+  const NP_TYPES = {
+    np_branch: '841339c7-591a-42e2-8233-7a0a00f0ed6f',
+    np_postomat: 'f9316480-5f2d-425d-bc2c-ac7cd29decf0'
+  };
   let npDown = false;
 
   function npCall(modelName, calledMethod, methodProperties) {
@@ -402,29 +409,36 @@
     });
   }
 
+  function clearBranchSel() {
+    form.npBranchRef = '';
+    form.npBranchName = '';
+    form.fBranch = '';
+    const b = $('#fBranch');
+    if (b) b.value = '';
+  }
+
+  function syncBranchInput() {
+    const b = $('#fBranch');
+    if (!b) return;
+    b.disabled = !form.npCityRef && !npDown;
+    b.placeholder = b.disabled
+      ? 'Спершу оберіть місто'
+      : form.dlv === 'np_postomat' ? 'Номер або адреса поштомата' : 'Номер або адреса відділення';
+  }
+
   function initNovaPoshta() {
     const city = $('#fCity');
     const branch = $('#fBranch');
     if (!city || !branch) return;
 
-    const syncBranch = () => {
-      branch.disabled = !form.npCityRef && !npDown;
-      branch.placeholder = branch.disabled ? 'Спершу оберіть місто' : 'Номер або адреса відділення';
-    };
-    const clearBranch = () => {
-      form.npBranchRef = '';
-      form.npBranchName = '';
-      form.fBranch = '';
-      branch.value = '';
-    };
-
     city.addEventListener('input', () => {
       if (city.value.trim() === form.npCityName) return;
       form.npCityRef = '';
       form.npCityName = '';
-      clearBranch();
+      clearBranchSel();
       saveForm();
-      syncBranch();
+      syncBranchInput();
+      renderCart();
     });
     branch.addEventListener('input', () => {
       if (branch.value.trim() === form.npBranchName) return;
@@ -443,13 +457,14 @@
         form.npCityRef = r.ref;
         form.npCityName = r.value;
         form.fCity = r.value;
-        clearBranch();
+        clearBranchSel();
         saveForm();
-        syncBranch();
+        syncBranchInput();
         city.closest('.field').classList.remove('err');
+        renderCart();
         branch.focus();
       },
-      onError: syncBranch
+      onError: syncBranchInput
     });
 
     autocomplete(branch, $('#fBranchList'), {
@@ -457,22 +472,23 @@
       query: v => (v.trim() === form.npBranchName ? '' : v.trim()),
       load: q => {
         if (!form.npCityRef) return Promise.reject(Object.assign(new Error('nocity'), { msg: 'Спершу оберіть місто зі списку' }));
+        // у великих містах перша сотня поштоматів — у житлових будинках, тож без пошуку список марний
+        if (form.dlv === 'np_postomat' && !q) return Promise.reject(Object.assign(new Error('hint'), { msg: 'Введіть номер поштомата або назву вулиці' }));
         // якщо ввели лише номер — відділення з цим номером іде першим
         const num = /^\s*№?\s*\d+\s*$/.test(q) ? q.replace(/\D/g, '') : '';
-        const base = { CityRef: form.npCityRef, Limit: '50', Page: '1', Language: 'UA' };
+        const base = { CityRef: form.npCityRef, Limit: '100', Page: '1', Language: 'UA' };
+        if (NP_TYPES[form.dlv]) base.TypeOfWarehouseRef = NP_TYPES[form.dlv];
         return Promise.all([
           npCall('AddressGeneral', 'getWarehouses', { ...base, FindByString: q }),
           num ? npCall('AddressGeneral', 'getWarehouses', { ...base, WarehouseId: num }).catch(() => []) : []
         ]).then(([found, exact]) => {
           const seen = new Set();
+          // поштомати в житлових будинках — у кінець списку з позначкою
+          const residents = w => /тільки для мешканців/i.test(w.Description);
           return [...exact.filter(w => String(w.Number) === num), ...found]
             .filter(w => !seen.has(w.Ref) && seen.add(w.Ref))
-            .map(w => ({
-              title: w.Description,
-              sub: /postomat/i.test(w.CategoryOfWarehouse) ? 'Поштомат' : '',
-              value: w.Description,
-              ref: w.Ref
-            }));
+            .sort((a, b) => residents(a) - residents(b))
+            .map(w => ({ title: w.Description, sub: residents(w) ? 'лише для мешканців будинку' : '', value: w.Description, ref: w.Ref }));
         });
       },
       pick: r => {
@@ -482,17 +498,107 @@
         saveForm();
         branch.closest('.field').classList.remove('err');
       },
-      onError: syncBranch
+      onError: syncBranchInput
     });
-
-    syncBranch();
   }
 
-  /* ---------- сторінка кошика ---------- */
+  /* ---------- оформлення замовлення ---------- */
   let done = false;
   let sending = false;
   const form = store.get('ff-form', {}) || {};
   const saveForm = () => store.set('ff-form', form);
+  const isNp = () => !!form.dlv && form.dlv !== 'courier';
+
+  // телефон: завжди +380 і 9 цифр
+  const phoneDigits = v => {
+    let d = String(v).replace(/\D/g, '');
+    if ('380'.startsWith(d)) return '';
+    if (d.startsWith('380')) d = d.slice(3);
+    else if (d.startsWith('80')) d = d.slice(2);
+    else if (d.startsWith('0')) d = d.slice(1);
+    return d.slice(0, 9);
+  };
+  const formatPhone = d => {
+    const parts = [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean);
+    return parts.length ? `+380 ${parts.join(' ')}` : '+380 ';
+  };
+
+  const optHtml = (name, o, checked, withPrice) =>
+    `<label class="opt"><input type="radio" name="${name}" value="${o.id}"${checked ? ' checked' : ''}>` +
+    `<span class="opt__txt"><b>${esc(o.title)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</span>` +
+    `${withPrice ? `<em class="opt__price" data-price-for="${o.id}"></em>` : ''}</label>`;
+
+  // орієнтовна вартість доставки Новою Поштою
+  let npQuote = { key: '', cost: null, loading: false };
+  const cartWeight = () => Object.keys(cart).reduce((s, id) => {
+    const p = byId(id);
+    const q = cart[id];
+    return s + (p.kg ? avgKg(p) * q : p.unit === 'кг' ? q : (p.weightKg || 0.5) * q);
+  }, 1); // +1 кг на термопакування з охолоджувачами
+
+  function refreshNpQuote() {
+    if (!isNp() || !form.npCityRef || !Object.keys(cart).length) {
+      npQuote = { key: '', cost: null, loading: false };
+      return;
+    }
+    const weight = Math.ceil(cartWeight() * 2) / 2;
+    const declared = Math.max(300, Math.round(subtotal()));
+    const key = [form.npCityRef, form.dlv, weight, declared].join('|');
+    if (npQuote.key === key) return;
+    npQuote = { key, cost: null, loading: true };
+    npCall('InternetDocument', 'getDocumentPrice', {
+      CitySender: CFG.npSenderCityRef || NP_DNIPRO,
+      CityRecipient: form.npCityRef,
+      Weight: String(weight),
+      ServiceType: form.dlv === 'np_postomat' ? 'WarehousePostomat' : 'WarehouseWarehouse',
+      Cost: String(declared),
+      CargoType: 'Parcel',
+      SeatsAmount: '1'
+    })
+      .then(d => {
+        if (npQuote.key !== key) return;
+        npQuote = { key, cost: d[0] ? Number(d[0].Cost) : null, loading: false };
+        renderCart();
+      })
+      .catch(() => {
+        if (npQuote.key !== key) return;
+        npQuote = { key, cost: null, loading: false };
+        renderCart();
+      });
+  }
+
+  const npQuoteText = () => {
+    if (!form.npCityRef) return 'оберіть місто';
+    if (npQuote.loading) return 'рахуємо…';
+    return npQuote.cost != null ? `≈ ${fmt(npQuote.cost)} грн` : 'за тарифом НП';
+  };
+
+  function renderPayOpts() {
+    const box = $('#payOpts');
+    if (!box) return;
+    const list = PAY[isNp() ? 'np' : 'courier'] || [];
+    if (!list.some(p => p.id === form.pay)) {
+      form.pay = list[0] ? list[0].id : '';
+      saveForm();
+    }
+    box.innerHTML = list.map(p => optHtml('pay', p, p.id === form.pay, false)).join('');
+  }
+
+  function setDelivery(id) {
+    const d = DLV.find(x => x.id === id) || DLV[0];
+    if (!d) return;
+    if (form.dlv && form.dlv !== d.id && form.dlv !== 'courier' && d.id !== 'courier') clearBranchSel();
+    form.dlv = d.id;
+    saveForm();
+    $$('input[name="dlv"]').forEach(i => { i.checked = i.value === d.id; });
+    const group = d.id === 'courier' ? 'courier' : 'np';
+    $$('[data-dlv]').forEach(el => { el.hidden = el.dataset.dlv !== group; });
+    const lbl = $('#fBranchLbl');
+    if (lbl) lbl.textContent = d.id === 'np_postomat' ? 'Поштомат Нової Пошти' : 'Відділення Нової Пошти';
+    syncBranchInput();
+    renderPayOpts();
+    setZone(d.zone);
+  }
 
   function initCart() {
     $$('[data-f]').forEach(el => {
@@ -503,8 +609,33 @@
         el.closest('.field').classList.remove('err');
       });
     });
+
+    const phone = $('#fPhone');
+    if (phone) {
+      const apply = () => {
+        phone.value = formatPhone(phoneDigits(phone.value));
+        form.fPhone = phone.value;
+        saveForm();
+      };
+      if (phone.value) apply();
+      phone.addEventListener('input', apply);
+      phone.addEventListener('focus', () => { if (!phone.value) phone.value = '+380 '; });
+      phone.addEventListener('blur', () => {
+        if (phoneDigits(phone.value)) return;
+        phone.value = '';
+        form.fPhone = '';
+        saveForm();
+      });
+    }
+
+    const opts = $('#deliveryOpts');
+    if (opts) opts.innerHTML = DLV.map(d => optHtml('dlv', d, false, true)).join('');
     initNovaPoshta();
     hooks.push(renderCart);
+
+    const stored = DLV.find(d => d.id === form.dlv);
+    const initial = stored && stored.zone === zone ? stored : DLV.find(d => d.zone === zone) || DLV[0];
+    if (initial) setDelivery(initial.id);
   }
 
   function renderCart() {
@@ -528,16 +659,34 @@
       </li>`;
     }).join('');
 
+    refreshNpQuote();
     const sub = subtotal();
     const fee = feeFor(sub);
     const ap = hasApprox() ? '≈ ' : '';
+    const np = isNp();
+
+    $('#sumCount').textContent = `Товари (${ids.length})`;
     $('#sumGoods').textContent = `${ap}${fmt(sub)} грн`;
     $('#sumFeeName').textContent = z.feeName;
     $('#sumFee').textContent = fee ? `${fmt(fee)} грн` : 'безкоштовно';
+    $('#sumNpRow').hidden = !np;
+    if (np) $('#sumNp').textContent = npQuoteText();
     $('#sumTotal').textContent = `${ap}${fmt(sub + fee)} грн`;
+
+    const notes = [];
+    if (np) notes.push('Доставку Нова Пошта рахує за своїм тарифом, оплачується при отриманні.');
+    if (np && form.pay === 'cod') notes.push('За оплату при отриманні Нова Пошта бере комісію.');
+    if (hasApprox()) notes.push('Лосось продається за вагою — точну суму назвемо після зважування.');
     const note = $('#sumNote');
-    note.textContent = z.note || '';
-    note.hidden = !z.note;
+    note.textContent = notes.join(' ');
+    note.hidden = !notes.length;
+
+    const courierFee = sub >= ZONES.dnipro.free ? 'безкоштовно' : `${fmt(ZONES.dnipro.fee)} грн`;
+    $$('[data-price-for]').forEach(el => {
+      const id = el.dataset.priceFor;
+      if (id === 'courier') el.textContent = courierFee;
+      else el.textContent = id === form.dlv && npQuote.cost != null ? `≈ ${fmt(npQuote.cost)} грн` : 'тариф НП';
+    });
 
     const warn = $('#cartWarn');
     if (ids.length && sub < z.min) {
@@ -555,15 +704,17 @@
 
   function validate() {
     const need = [
-      ['fName', v => v.length > 1, 'Вкажіть, будь ласка, імʼя'],
-      ['fPhone', v => v.replace(/\D/g, '').length >= 10, 'Перевірте номер телефону']
+      ['fLast', v => v.length > 1, 'Вкажіть прізвище'],
+      ['fFirst', v => v.length > 1, 'Вкажіть імʼя'],
+      ['fPhone', v => phoneDigits(v).length === 9, 'Перевірте номер телефону']
     ];
-    if (zone === 'dnipro') {
+    if (!isNp()) {
       need.push(['fAddr', v => v.length > 3, 'Вкажіть адресу доставки']);
     } else {
+      const what = form.dlv === 'np_postomat' ? 'поштомат' : 'відділення';
       need.push(
         ['fCity', v => (npDown ? v.length > 1 : !!form.npCityRef), npDown ? 'Вкажіть місто' : 'Оберіть місто зі списку'],
-        ['fBranch', v => (npDown ? v.length > 0 : !!form.npBranchRef), npDown ? 'Вкажіть відділення або поштомат' : 'Оберіть відділення або поштомат зі списку']
+        ['fBranch', v => (npDown ? v.length > 0 : !!form.npBranchRef), npDown ? `Вкажіть ${what}` : `Оберіть ${what} зі списку`]
       );
     }
     $$('.field.err').forEach(f => f.classList.remove('err'));
@@ -585,17 +736,28 @@
     const fee = feeFor(sub);
     const d = new Date();
     const pad = n => String(n).padStart(2, '0');
-    const ua = zone === 'ukraine';
+    const np = isNp();
+    const dlv = DLV.find(x => x.id === form.dlv) || {};
+    const pay = (PAY[np ? 'np' : 'courier'] || []).find(x => x.id === form.pay) || {};
+    const digits = phoneDigits(val('fPhone'));
     return {
       id: `FF-${pad(d.getDate())}${pad(d.getMonth() + 1)}-${Math.floor(1000 + Math.random() * 9000)}`,
-      name: val('fName'),
-      phone: val('fPhone'),
+      lastName: val('fLast'),
+      firstName: val('fFirst'),
+      name: `${val('fLast')} ${val('fFirst')}`,
+      phone: `+380${digits}`,
       zone: z.label,
-      address: ua ? '' : val('fAddr'),
-      city: ua ? val('fCity') : '',
-      cityRef: ua ? form.npCityRef || '' : '',
-      branch: ua ? val('fBranch') : '',
-      branchRef: ua ? form.npBranchRef || '' : '',
+      deliveryId: dlv.id || '',
+      delivery: dlv.title || '',
+      address: np ? '' : val('fAddr'),
+      city: np ? val('fCity') : '',
+      cityRef: np ? form.npCityRef || '' : '',
+      branch: np ? val('fBranch') : '',
+      branchRef: np ? form.npBranchRef || '' : '',
+      npCost: np && npQuote.cost != null ? Math.round(npQuote.cost) : 0,
+      weight: np ? Math.ceil(cartWeight() * 2) / 2 : 0,
+      paymentId: pay.id || '',
+      payment: pay.title || '',
       comment: val('fNote'),
       website: val('fWebsite'),
       items: Object.keys(cart).map(id => {
@@ -657,11 +819,11 @@
       .finally(() => {
         sending = false;
         btn.disabled = false;
-        label.textContent = 'Оформити замовлення';
+        label.textContent = 'Підтвердити замовлення';
       });
   }
 
-  /* ---------- кліки ---------- */
+  /* ---------- кліки й вибір ---------- */
   document.addEventListener('click', e => {
     const t = e.target.closest('[data-act],[data-zone-pick],[data-menu]');
     if (!t) return;
@@ -687,6 +849,12 @@
       case 'remove': setQty(id, 0); break;
       case 'send': send(); break;
     }
+  });
+
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t.name === 'dlv') setDelivery(t.value);
+    else if (t.name === 'pay') { form.pay = t.value; saveForm(); renderCart(); }
   });
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') openMenu(false); });

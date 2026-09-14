@@ -22,7 +22,7 @@
  */
 
 const SHEET_NAME = 'Замовлення';
-const HEADERS = ['Дата', '№', 'Статус', 'Імʼя', 'Телефон', 'Доставка', 'Адреса / місто', 'Відділення НП', 'Товари', 'Сума, грн', 'Коментар'];
+const HEADERS = ['Дата', '№', 'Статус', 'Прізвище та імʼя', 'Телефон', 'Доставка', 'Адреса / місто', 'Відділення / поштомат', 'Оплата', 'Товари', 'Сума, грн', 'Коментар'];
 
 function doPost(e) {
   try {
@@ -69,9 +69,10 @@ function appendOrder(d, id) {
     'Нове',
     cell(d.name),
     cell(d.phone),
-    cell(d.zone),
+    cell(d.delivery || d.zone),
     cell(d.address || d.city),
     cell(d.branch),
+    cell(d.payment),
     cell(itemsText(d.items)),
     (d.approx ? '≈ ' : '') + Math.round(Number(d.total) || 0),
     cell(d.comment)
@@ -91,15 +92,19 @@ function notify(d, id) {
     '',
     'Товари: ' + (d.approx ? '≈ ' : '') + money(d.goods),
     esc(clean(d.feeName) || 'Доставка') + ': ' + (Number(d.fee) ? money(d.fee) : 'безкоштовно'),
-    '<b>Разом: ' + (d.approx ? '≈ ' : '') + money(d.total) + '</b>',
-    '',
-    'Імʼя: ' + esc(clean(d.name)),
-    'Телефон: ' + esc(clean(d.phone)),
-    'Доставка: ' + esc(clean(d.zone))
+    '<b>До сплати: ' + (d.approx ? '≈ ' : '') + money(d.total) + '</b>'
   ];
+  if (Number(d.npCost)) lines.push('Нова Пошта ≈ ' + money(d.npCost) + ' (при отриманні)');
+  lines.push(
+    '',
+    'Клієнт: ' + esc(clean(d.name)),
+    'Телефон: ' + esc(clean(d.phone)),
+    'Доставка: ' + esc(clean(d.delivery || d.zone))
+  );
   if (d.address) lines.push('Адреса: ' + esc(clean(d.address)));
   if (d.city) lines.push('Місто: ' + esc(clean(d.city)));
-  if (d.branch) lines.push('Відділення НП: ' + esc(clean(d.branch)));
+  if (d.branch) lines.push('Відділення: ' + esc(clean(d.branch)));
+  if (d.payment) lines.push('Оплата: ' + esc(clean(d.payment)));
   if (d.comment) lines.push('Коментар: ' + esc(clean(d.comment)));
 
   UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
@@ -126,9 +131,11 @@ function findChatId() {
 /* Тестове замовлення: перевіряє таблицю й Telegram без сайту */
 function testOrder() {
   const res = doPost({ postData: { contents: JSON.stringify({
-    id: 'TEST-1', name: 'Тест', phone: '+380 00 000 00 00', zone: 'Дніпро', address: 'тестова адреса',
+    id: 'TEST-1', name: 'Тестенко Тест', phone: '+380000000000',
+    delivery: 'Нова Пошта: відділення', city: 'м. Львів, Львівська обл.', branch: 'Відділення №1: вул. Городоцька, 359',
+    payment: 'Передоплата за реквізитами ФОП', npCost: 148,
     items: [{ name: 'Філе лосося охолоджене', qty: 1, unit: 'філе', sum: 2044, approx: true }],
-    goods: 2044, fee: 0, feeName: 'Доставка по Дніпру', total: 2044, approx: true, comment: 'перевірка'
+    goods: 2044, fee: 0, feeName: 'Термопакування', total: 2044, approx: true, comment: 'перевірка'
   }) } });
   console.log(res.getContent());
 }

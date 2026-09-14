@@ -552,6 +552,31 @@ body.bar-on .cartf { bottom: 92px; }
 .ac__item:hover, .ac__item.on { background: var(--ice); }
 .ac__msg { padding: 12px 14px; font-size: 14px; color: var(--muted); }
 
+/* ---------- оформлення: кроки ---------- */
+.cogrid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 28px; align-items: start; }
+.comain { display: grid; gap: 14px; }
+.costep { padding: 24px; border: 1px solid var(--line); background: #fff; }
+.costep > h2, .costep__head h2 { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; font-size: 28px; }
+.costep > h2 span { width: 34px; height: 34px; flex: none; display: grid; place-items: center; background: var(--salmon); color: #fff; font-size: 19px; }
+.costep__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
+.costep__head h2 { margin: 0; }
+.costep .citems { border-top: 0; }
+.costep .citem:last-child { border-bottom: 0; }
+.costep .opts + .fields { margin-top: 6px; }
+.opts { display: grid; gap: 8px; }
+.opt { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1.5px solid var(--line); background: #fff; cursor: pointer; transition: border-color .2s, background .2s; }
+.opt:hover { border-color: var(--ink); }
+.opt input { appearance: none; -webkit-appearance: none; flex: none; width: 20px; height: 20px; margin: 0; border: 2px solid #B9C7CF; background: #fff; transition: border-color .15s, background .15s; }
+.opt input:checked { border-color: var(--ink); background: var(--salmon); box-shadow: inset 0 0 0 3px #fff; }
+.opt input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.opt:has(input:checked) { border-color: var(--ink); background: var(--ice); }
+.opt__txt { flex: 1; min-width: 0; line-height: 1.35; }
+.opt__txt b { display: block; font-weight: 600; color: var(--ink); }
+.opt__txt small { display: block; margin-top: 2px; font-size: 13px; color: var(--muted); }
+.opt__price { flex: none; font-style: normal; font-weight: 700; font-size: 14.5px; color: var(--ink); white-space: nowrap; }
+.coside { position: sticky; top: 92px; padding: 22px; border: 1px solid var(--line); background: #fff; }
+.coside .h3 { margin-top: 0; }
+
 /* ---------- адаптив ---------- */
 @media (max-width: 960px) {
   .hdr__nav { display: none; }
@@ -564,7 +589,8 @@ body.bar-on .cartf { bottom: 92px; }
   .prod { grid-template-columns: 1fr; gap: 28px; padding-bottom: 64px; }
   .gal { position: static; }
   .quality, .recipe, .deliv, .faqwrap, .cartgrid { grid-template-columns: 1fr; gap: 28px; }
-  .faqwrap__head, .cartside { position: static; }
+  .faqwrap__head, .cartside, .coside { position: static; }
+  .cogrid { grid-template-columns: 1fr; gap: 14px; }
   .ideas { grid-template-columns: repeat(2, 1fr); }
   .perks4 { grid-template-columns: repeat(2, 1fr); }
   .contacts { grid-template-columns: 1fr 1fr; }
@@ -662,6 +688,10 @@ body.bar-on .cartf { bottom: 92px; }
   .citem > .step { justify-self: start; }
   .fields { grid-template-columns: 1fr; }
   .cartside { padding: 16px; }
+  .costep, .coside { padding: 16px; }
+  .costep > h2, .costep__head h2 { font-size: 23px; }
+  .costep > h2 span { width: 30px; height: 30px; font-size: 17px; }
+  .opt { padding: 12px; gap: 12px; }
 
   .cta__in { padding-block: 52px; }
   .cta__btns, .cta__btns .btn { width: 100%; }
