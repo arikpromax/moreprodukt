@@ -629,6 +629,7 @@ body.cobar-on .toast { bottom: 90px; }
 .flag { flex: none; width: 22px; height: 15px; background: linear-gradient(#0057B7 50%, #FFD700 50%); }
 .costep > .check { margin-top: 18px; }
 
+
 /* ---------- юридичні сторінки ---------- */
 .legal { max-width: 820px; padding-bottom: 88px; }
 .legal h2 { font-size: 26px; margin: 34px 0 10px; }
