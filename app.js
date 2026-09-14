@@ -460,7 +460,7 @@
         clearBranchSel();
         saveForm();
         syncBranchInput();
-        city.closest('.field').classList.remove('err');
+        fieldMsg(city, '');
         renderCart();
         branch.focus();
       },
@@ -496,7 +496,7 @@
         form.npBranchName = r.value;
         form.fBranch = r.value;
         saveForm();
-        branch.closest('.field').classList.remove('err');
+        fieldMsg(branch, '');
       },
       onError: syncBranchInput
     });
@@ -508,20 +508,38 @@
   const form = store.get('ff-form', {}) || {};
   const saveForm = () => store.set('ff-form', form);
   const isNp = () => !!form.dlv && form.dlv !== 'courier';
+  const isOther = () => form.recv === 'other';
+  // імʼя й прізвище — лише українські літери: інакше Нова Пошта не створить накладну
+  const NAME_RE = /^[А-ЩЬЮЯҐЄІЇа-щьюяґєії'’ʼ -]{2,40}$/;
 
-  // телефон: завжди +380 і 9 цифр
+  // телефон: +380 стоїть окремо, у полі — 9 цифр «67 123 45 67»
   const phoneDigits = v => {
     let d = String(v).replace(/\D/g, '');
-    if ('380'.startsWith(d)) return '';
-    if (d.startsWith('380')) d = d.slice(3);
-    else if (d.startsWith('80')) d = d.slice(2);
-    else if (d.startsWith('0')) d = d.slice(1);
+    if (d.length > 9 && d.startsWith('380')) d = d.slice(3);
+    else if (d.length > 9 && d.startsWith('80')) d = d.slice(2);
+    if (d.startsWith('0')) d = d.slice(1);
     return d.slice(0, 9);
   };
-  const formatPhone = d => {
-    const parts = [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean);
-    return parts.length ? `+380 ${parts.join(' ')}` : '+380 ';
-  };
+  const formatPhone = d => [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean).join(' ');
+
+  // текст помилки під полем
+  function fieldMsg(el, msg) {
+    const field = el.closest('.field');
+    if (!field) return;
+    let m = field.querySelector('.field__msg');
+    if (!msg) {
+      field.classList.remove('err');
+      if (m) m.remove();
+      return;
+    }
+    field.classList.add('err');
+    if (!m) {
+      m = document.createElement('small');
+      m.className = 'field__msg';
+      field.appendChild(m);
+    }
+    m.textContent = msg;
+  }
 
   const optHtml = (name, o, checked, withPrice) =>
     `<label class="opt"><input type="radio" name="${name}" value="${o.id}"${checked ? ' checked' : ''}>` +
@@ -584,6 +602,18 @@
     box.innerHTML = list.map(p => optHtml('pay', p, p.id === form.pay, false)).join('');
   }
 
+  // «Я отримувач» / «Отримувач інша людина»
+  function syncOther() {
+    const other = isOther();
+    $$('[data-recv]').forEach(b => {
+      const on = b.dataset.recv === (other ? 'other' : 'me');
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-checked', String(on));
+    });
+    const box = $('#otherFields');
+    if (box) box.hidden = !other;
+  }
+
   function setDelivery(id) {
     const d = DLV.find(x => x.id === id) || DLV[0];
     if (!d) return;
@@ -594,44 +624,61 @@
     const group = d.id === 'courier' ? 'courier' : 'np';
     $$('[data-dlv]').forEach(el => { el.hidden = el.dataset.dlv !== group; });
     const lbl = $('#fBranchLbl');
-    if (lbl) lbl.textContent = d.id === 'np_postomat' ? 'Поштомат Нової Пошти' : 'Відділення Нової Пошти';
+    if (lbl) lbl.innerHTML = `${d.id === 'np_postomat' ? 'Поштомат' : 'Відділення'} Нової Пошти <i class="req">*</i>`;
     syncBranchInput();
     renderPayOpts();
     setZone(d.zone);
   }
 
+  // на телефоні — закріплена панель «До сплати · Підтвердити», поки основна кнопка поза екраном
+  function initCoBar() {
+    const bar = $('#cobar');
+    const btn = $('#cartSend');
+    if (!bar || !btn || !('IntersectionObserver' in window)) return;
+    const mq = window.matchMedia('(max-width: 960px)');
+    let btnVisible = false;
+    const sync = () => {
+      const show = mq.matches && !btnVisible && !done && Object.keys(cart).length > 0;
+      bar.hidden = !show;
+      document.body.classList.toggle('cobar-on', show);
+    };
+    new IntersectionObserver(([en]) => { btnVisible = en.isIntersecting; sync(); }).observe(btn);
+    if (mq.addEventListener) mq.addEventListener('change', sync);
+    else if (mq.addListener) mq.addListener(sync);
+    hooks.push(sync);
+  }
+
   function initCart() {
+    if (!form.recv) form.recv = form.fOther ? 'other' : 'me';
+
     $$('[data-f]').forEach(el => {
       el.value = form[el.id] || '';
       el.addEventListener('input', () => {
         form[el.id] = el.value;
         saveForm();
-        el.closest('.field').classList.remove('err');
+        fieldMsg(el, '');
       });
     });
 
-    const phone = $('#fPhone');
-    if (phone) {
+    $$('[data-phone]').forEach(phone => {
       const apply = () => {
         phone.value = formatPhone(phoneDigits(phone.value));
-        form.fPhone = phone.value;
+        form[phone.id] = phone.value;
         saveForm();
       };
       if (phone.value) apply();
       phone.addEventListener('input', apply);
-      phone.addEventListener('focus', () => { if (!phone.value) phone.value = '+380 '; });
-      phone.addEventListener('blur', () => {
-        if (phoneDigits(phone.value)) return;
-        phone.value = '';
-        form.fPhone = '';
-        saveForm();
-      });
-    }
+    });
+
+    const gift = $('#fGift');
+    if (gift) gift.checked = !!form.gift;
 
     const opts = $('#deliveryOpts');
     if (opts) opts.innerHTML = DLV.map(d => optHtml('dlv', d, false, true)).join('');
     initNovaPoshta();
     hooks.push(renderCart);
+    initCoBar();
+    syncOther();
 
     const stored = DLV.find(d => d.id === form.dlv);
     const initial = stored && stored.zone === zone ? stored : DLV.find(d => d.zone === zone) || DLV[0];
@@ -671,7 +718,10 @@
     $('#sumFee').textContent = fee ? `${fmt(fee)} грн` : 'безкоштовно';
     $('#sumNpRow').hidden = !np;
     if (np) $('#sumNp').textContent = npQuoteText();
-    $('#sumTotal').textContent = `${ap}${fmt(sub + fee)} грн`;
+    const total = `${ap}${fmt(sub + fee)} грн`;
+    $('#sumTotal').textContent = total;
+    const cobarTotal = $('#cobarTotal');
+    if (cobarTotal) cobarTotal.textContent = total;
 
     const notes = [];
     if (np) notes.push('Доставку Нова Пошта рахує за своїм тарифом, оплачується при отриманні.');
@@ -703,31 +753,42 @@
   }
 
   function validate() {
-    const need = [
-      ['fLast', v => v.length > 1, 'Вкажіть прізвище'],
-      ['fFirst', v => v.length > 1, 'Вкажіть імʼя'],
-      ['fPhone', v => phoneDigits(v).length === 9, 'Перевірте номер телефону']
+    const nameRule = (id, empty) => [id, v => NAME_RE.test(v), v => (v ? 'Лише українські літери, як у документі' : empty)];
+    const phoneRule = id => [id, v => phoneDigits(v).length === 9, v => (phoneDigits(v) ? 'Номер має містити 9 цифр' : 'Вкажіть номер телефону')];
+    const rules = [
+      nameRule('fFirst', 'Вкажіть імʼя'),
+      nameRule('fLast', 'Вкажіть прізвище'),
+      phoneRule('fPhone'),
     ];
+    if (isOther()) {
+      rules.push(nameRule('fRFirst', 'Вкажіть імʼя отримувача'), nameRule('fRLast', 'Вкажіть прізвище отримувача'), phoneRule('fRPhone'));
+    }
     if (!isNp()) {
-      need.push(['fAddr', v => v.length > 3, 'Вкажіть адресу доставки']);
+      rules.push(['fAddr', v => v.length > 3, () => 'Вкажіть вулицю, будинок і квартиру']);
     } else {
       const what = form.dlv === 'np_postomat' ? 'поштомат' : 'відділення';
-      need.push(
-        ['fCity', v => (npDown ? v.length > 1 : !!form.npCityRef), npDown ? 'Вкажіть місто' : 'Оберіть місто зі списку'],
-        ['fBranch', v => (npDown ? v.length > 0 : !!form.npBranchRef), npDown ? `Вкажіть ${what}` : `Оберіть ${what} зі списку`]
+      rules.push(
+        ['fCity', v => (npDown ? v.length > 1 : !!form.npCityRef), () => (npDown ? 'Вкажіть місто' : 'Оберіть місто зі списку')],
+        ['fBranch', v => (npDown ? v.length > 0 : !!form.npBranchRef), () => (npDown ? `Вкажіть ${what}` : `Оберіть ${what} зі списку`)]
       );
     }
-    $$('.field.err').forEach(f => f.classList.remove('err'));
-    for (const [id, ok, msg] of need) {
+
+    // старі помилки з полів, які зараз приховані, прибираємо
+    $$('.field__msg').forEach(m => { m.closest('.field').classList.remove('err'); m.remove(); });
+    let first = null;
+    for (const [id, ok, msg] of rules) {
       const el = document.getElementById(id);
-      if (!ok(el.value.trim())) {
-        el.closest('.field').classList.add('err');
-        if (!el.disabled) el.focus();
-        toast(msg);
-        return false;
-      }
+      if (!el) continue;
+      const v = el.value.trim();
+      if (ok(v)) { fieldMsg(el, ''); continue; }
+      fieldMsg(el, msg(v));
+      if (!first) first = el;
     }
-    return true;
+    if (!first) return true;
+    first.closest('.field').scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (!first.disabled) first.focus({ preventScroll: true });
+    toast('Перевірте виділені поля');
+    return false;
   }
 
   function orderPayload() {
@@ -737,15 +798,21 @@
     const d = new Date();
     const pad = n => String(n).padStart(2, '0');
     const np = isNp();
+    const other = isOther();
     const dlv = DLV.find(x => x.id === form.dlv) || {};
     const pay = (PAY[np ? 'np' : 'courier'] || []).find(x => x.id === form.pay) || {};
-    const digits = phoneDigits(val('fPhone'));
     return {
       id: `FF-${pad(d.getDate())}${pad(d.getMonth() + 1)}-${Math.floor(1000 + Math.random() * 9000)}`,
-      lastName: val('fLast'),
       firstName: val('fFirst'),
+      lastName: val('fLast'),
       name: `${val('fLast')} ${val('fFirst')}`,
-      phone: `+380${digits}`,
+      phone: `+380${phoneDigits(val('fPhone'))}`,
+      gift: !!form.gift,
+      recipientOther: other,
+      recipientFirstName: other ? val('fRFirst') : '',
+      recipientLastName: other ? val('fRLast') : '',
+      recipientName: other ? `${val('fRLast')} ${val('fRFirst')}` : '',
+      recipientPhone: other ? `+380${phoneDigits(val('fRPhone'))}` : '',
       zone: z.label,
       deliveryId: dlv.id || '',
       delivery: dlv.title || '',
@@ -793,9 +860,9 @@
 
     const order = orderPayload();
     sending = true;
-    const btn = $('#cartSend');
+    const buttons = $$('[data-act="send"]');
     const label = $('#cartSendTxt');
-    btn.disabled = true;
+    buttons.forEach(b => { b.disabled = true; });
     label.textContent = 'Надсилаємо…';
     fetch(CFG.orderEndpoint, {
       method: 'POST',
@@ -818,7 +885,7 @@
       })
       .finally(() => {
         sending = false;
-        btn.disabled = false;
+        buttons.forEach(b => { b.disabled = false; });
         label.textContent = 'Підтвердити замовлення';
       });
   }
@@ -847,6 +914,11 @@
       }
       case 'dec': setQty(id, (cart[id] || 0) - 1); break;
       case 'remove': setQty(id, 0); break;
+      case 'recv':
+        form.recv = t.dataset.recv === 'other' ? 'other' : 'me';
+        saveForm();
+        syncOther();
+        break;
       case 'send': send(); break;
     }
   });
@@ -855,6 +927,7 @@
     const t = e.target;
     if (t.name === 'dlv') setDelivery(t.value);
     else if (t.name === 'pay') { form.pay = t.value; saveForm(); renderCart(); }
+    else if (t.id === 'fGift') { form.gift = t.checked; saveForm(); }
   });
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') openMenu(false); });

@@ -81,7 +81,7 @@
   <div class="done" id="orderDone" hidden>
     <span class="done__ico"><svg class="i"><use href="#i-check"/></svg></span>
     <h2>Дякуємо! Замовлення <span id="doneId"></span> прийняте</h2>
-    <p>Ми звʼяжемося з вами найближчим часом, щоб підтвердити наявність і точну суму. Найближча поставка — <b data-friday>пʼятниця</b>.</p>
+    <p>Ми звʼяжемося з вами, щоб підтвердити наявність і точну суму. Найближча поставка — <b data-friday>пʼятниця</b>.</p>
     <a class="btn btn--main" href="index.html">На головну</a>
   </div>
 
@@ -96,26 +96,50 @@
       </section>
 
       <section class="costep">
-        <h2><span>1</span>Контактні дані</h2>
-        <div class="fields">
-          <label class="field"><span>Прізвище</span><input id="fLast" data-f autocomplete="family-name"></label>
-          <label class="field"><span>Імʼя</span><input id="fFirst" data-f autocomplete="given-name"></label>
-          <label class="field field--wide"><span>Телефон</span><input id="fPhone" data-f type="tel" inputmode="tel" autocomplete="tel" placeholder="+380 __ ___ __ __"></label>
+        <h2><span>1</span>Ваші контактні дані</h2>
+        <div class="seg" role="radiogroup" aria-label="Хто отримує замовлення">
+          <button type="button" class="seg__btn on" data-act="recv" data-recv="me" role="radio" aria-checked="true">Я отримувач</button>
+          <button type="button" class="seg__btn" data-act="recv" data-recv="other" role="radio" aria-checked="false">Отримувач інша людина</button>
         </div>
+
+        <h3 class="costep__sub">Дані замовника</h3>
+        <div class="fields">
+          <label class="field"><span>Імʼя <i class="req">*</i></span><input id="fFirst" data-f autocomplete="given-name" placeholder="Введіть ваше імʼя"></label>
+          <label class="field"><span>Прізвище <i class="req">*</i></span><input id="fLast" data-f autocomplete="family-name" placeholder="Введіть ваше прізвище"></label>
+          <div class="field">
+            <label for="fPhone">Номер телефону <i class="req">*</i></label>
+            <div class="tel"><span class="tel__cc"><i class="flag" aria-hidden="true"></i>+380</span><input id="fPhone" data-f data-phone type="tel" inputmode="tel" autocomplete="tel-national" placeholder="67 123 45 67"></div>
+          </div>
+        </div>
+
+        <div id="otherFields" hidden>
+          <h3 class="costep__sub">Дані отримувача</h3>
+          <div class="fields">
+            <label class="field"><span>Імʼя отримувача <i class="req">*</i></span><input id="fRFirst" data-f autocomplete="off" placeholder="Імʼя отримувача"></label>
+            <label class="field"><span>Прізвище отримувача <i class="req">*</i></span><input id="fRLast" data-f autocomplete="off" placeholder="Прізвище отримувача"></label>
+            <div class="field">
+            <label for="fRPhone">Телефон отримувача <i class="req">*</i></label>
+            <div class="tel"><span class="tel__cc"><i class="flag" aria-hidden="true"></i>+380</span><input id="fRPhone" data-f data-phone type="tel" inputmode="tel" autocomplete="off" placeholder="67 123 45 67"></div>
+          </div>
+          </div>
+        </div>
+
+        <label class="check"><input type="checkbox" id="fGift"><span>Замовлення на подарунок (не вкладати чек до замовлення)</span></label>
+        <p class="field__hint">Імʼя та прізвище — українськими літерами, як у документі: так Нова Пошта без питань видасть посилку.</p>
       </section>
 
       <section class="costep">
         <h2><span>2</span>Доставка</h2>
         <div class="opts" id="deliveryOpts" role="radiogroup" aria-label="Спосіб доставки"></div>
         <div class="fields">
-          <label class="field field--wide" data-dlv="courier"><span>Адреса доставки</span><input id="fAddr" data-f autocomplete="street-address" placeholder="Вулиця, будинок, квартира"></label>
+          <label class="field field--wide" data-dlv="courier"><span>Адреса доставки <i class="req">*</i></span><input id="fAddr" data-f autocomplete="street-address" placeholder="Вулиця, будинок, квартира"></label>
           <div class="field field--wide field--ac" data-dlv="np" hidden>
-            <label for="fCity">Місто</label>
+            <label for="fCity">Місто <i class="req">*</i></label>
             <input id="fCity" data-f autocomplete="off" placeholder="Почніть вводити назву" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fCityList">
             <ul class="ac" id="fCityList" role="listbox" hidden></ul>
           </div>
           <div class="field field--wide field--ac" data-dlv="np" hidden>
-            <label for="fBranch" id="fBranchLbl">Відділення Нової Пошти</label>
+            <label for="fBranch" id="fBranchLbl">Відділення Нової Пошти <i class="req">*</i></label>
             <input id="fBranch" data-f autocomplete="off" placeholder="Номер або адреса відділення" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fBranchList">
             <ul class="ac" id="fBranchList" role="listbox" hidden></ul>
           </div>
@@ -143,9 +167,15 @@
       </div>
       <p class="warn" id="cartWarn" hidden></p>
       <button type="button" class="btn btn--main btn--block" id="cartSend" data-act="send"><svg class="i"><use href="#i-check"/></svg><span id="cartSendTxt">Підтвердити замовлення</span></button>
-      <p class="cart__hint">Підтверджуючи замовлення, ви погоджуєтесь на обробку персональних даних для доставки.</p>
+      <p class="cart__hint">Підтверджуючи замовлення, ви погоджуєтесь з <a href="oferta.html" target="_blank">публічною офертою</a> та <a href="polityka.html" target="_blank">політикою конфіденційності</a>.</p>
+      <p class="cart__hint cart__hint--food">Харчові продукти належної якості обміну й поверненню не підлягають. <a href="povernennia.html" target="_blank">Умови повернення</a></p>
       <p class="warn is-min" id="sendError" hidden>Не вдалося надіслати замовлення. Перевірте інтернет і спробуйте ще раз.</p>
     </aside>
+  </div>
+
+  <div class="cobar" id="cobar" hidden>
+    <div class="cobar__sum"><small>До сплати</small><b id="cobarTotal">0 грн</b></div>
+    <button type="button" class="btn btn--main" data-act="send">Підтвердити</button>
   </div>
 </section>
 </main>
@@ -186,8 +216,8 @@
       </div>
     </div>
     <div class="foot__bottom">
-      <span>© 2026 Fish Family</span>
-      <span>Ціни на сайті — ціни тижня. Остаточну суму підтвердимо в Direct.</span>
+      <span>© 2026 Fish Family · ФОП <em class="stub">[ПІБ]</em>, РНОКПП <em class="stub">[ІПН]</em></span>
+      <nav class="foot__legal" aria-label="Документи"><a href="oferta.html">Публічна оферта</a><a href="polityka.html">Політика конфіденційності</a><a href="povernennia.html">Обмін і повернення</a></nav>
     </div>
   </div>
 </footer>

@@ -14,6 +14,7 @@
  *      TG_CHAT_ID  — це число (для групи воно з мінусом)
  * 5. Розгорнути → Нове розгортання → тип «Вебзастосунок»:
  *      Виконувати від імені: Я;  Хто має доступ: Усі.
+ *    Google попросить дозволи (таблиці, зовнішні запити) — дозвольте.
  *    Скопіюйте URL вебзастосунку і вставте його в data.js → SHOP.orderEndpoint.
  * 6. Перевірка: виберіть функцію testOrder → «Виконати».
  *    У таблиці зʼявиться рядок, у Telegram — повідомлення.
@@ -22,7 +23,8 @@
  */
 
 const SHEET_NAME = 'Замовлення';
-const HEADERS = ['Дата', '№', 'Статус', 'Прізвище та імʼя', 'Телефон', 'Доставка', 'Адреса / місто', 'Відділення / поштомат', 'Оплата', 'Товари', 'Сума, грн', 'Коментар'];
+const SHOP_NAME = 'Fish Family';
+const HEADERS = ['Дата', '№', 'Статус', 'Прізвище та імʼя', 'Телефон', 'Отримувач (якщо інший)', 'Доставка', 'Адреса / місто', 'Відділення / поштомат', 'Оплата', 'Товари', 'Сума, грн', 'Коментар'];
 
 function doPost(e) {
   try {
@@ -69,13 +71,14 @@ function appendOrder(d, id) {
     'Нове',
     cell(d.name),
     cell(d.phone),
+    cell(d.recipientOther ? d.recipientName + ', ' + d.recipientPhone : ''),
     cell(d.delivery || d.zone),
     cell(d.address || d.city),
     cell(d.branch),
     cell(d.payment),
     cell(itemsText(d.items)),
     (d.approx ? '≈ ' : '') + Math.round(Number(d.total) || 0),
-    cell(d.comment)
+    cell((d.gift ? 'ПОДАРУНОК — не вкладати чек. ' : '') + (d.comment || ''))
   ]);
 }
 
@@ -97,14 +100,16 @@ function notify(d, id) {
   if (Number(d.npCost)) lines.push('Нова Пошта ≈ ' + money(d.npCost) + ' (при отриманні)');
   lines.push(
     '',
-    'Клієнт: ' + esc(clean(d.name)),
-    'Телефон: ' + esc(clean(d.phone)),
-    'Доставка: ' + esc(clean(d.delivery || d.zone))
+    'Замовник: ' + esc(clean(d.name)),
+    'Телефон: ' + esc(clean(d.phone))
   );
+  if (d.recipientOther) lines.push('Отримувач: ' + esc(clean(d.recipientName)) + ', ' + esc(clean(d.recipientPhone)));
+  lines.push('Доставка: ' + esc(clean(d.delivery || d.zone)));
   if (d.address) lines.push('Адреса: ' + esc(clean(d.address)));
   if (d.city) lines.push('Місто: ' + esc(clean(d.city)));
   if (d.branch) lines.push('Відділення: ' + esc(clean(d.branch)));
   if (d.payment) lines.push('Оплата: ' + esc(clean(d.payment)));
+  if (d.gift) lines.push('<b>Подарунок — не вкладати чек</b>');
   if (d.comment) lines.push('Коментар: ' + esc(clean(d.comment)));
 
   UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
@@ -132,8 +137,8 @@ function findChatId() {
 function testOrder() {
   const res = doPost({ postData: { contents: JSON.stringify({
     id: 'TEST-1', name: 'Тестенко Тест', phone: '+380000000000',
-    delivery: 'Нова Пошта: відділення', city: 'м. Львів, Львівська обл.', branch: 'Відділення №1: вул. Городоцька, 359',
-    payment: 'Передоплата за реквізитами ФОП', npCost: 148,
+    deliveryId: 'np_branch', delivery: 'Нова Пошта: відділення', city: 'м. Львів, Львівська обл.', branch: 'Відділення №1: вул. Городоцька, 359',
+    payment: 'Передоплата за реквізитами ФОП', npCost: 148, gift: true,
     items: [{ name: 'Філе лосося охолоджене', qty: 1, unit: 'філе', sum: 2044, approx: true }],
     goods: 2044, fee: 0, feeName: 'Термопакування', total: 2044, approx: true, comment: 'перевірка'
   }) } });
@@ -146,8 +151,13 @@ function itemsText(items) {
   }).join('\n');
 }
 
+// прибирає керівні символи (крім переносу рядка) й зайві пробіли
 function clean(v, max) {
-  return String(v == null ? '' : v).replace(/[\u0000-\u0009\u000B-\u001F]+/g, ' ').trim().slice(0, max || 300);
+  const s = String(v == null ? '' : v).split('').map(function (ch) {
+    const c = ch.charCodeAt(0);
+    return c === 10 || c >= 32 ? ch : ' ';
+  }).join('');
+  return s.replace(/ {2,}/g, ' ').trim().slice(0, max || 300);
 }
 
 // захист від формул у клітинках
