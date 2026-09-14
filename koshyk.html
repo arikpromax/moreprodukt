@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Кошик — Fish Family, Дніпро</title>
+<meta name="description" content="Кошик Fish Family: зберіть замовлення й надішліть його в Direct.">
+<meta name="theme-color" content="#0E2233">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans+Extra+Condensed:wght@600;700;800;900&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="cart">
+<script src="sprite.js"></script>
+
+<div class="ticker" aria-label="Умови магазину">
+  <div class="ticker__track">
+    <div class="ticker__group">
+      <span>Свіжа поставка лосося щопʼятниці</span><svg class="i"><use href="#i-fish"/></svg>
+      <span>Дніпро: доставка від 1 500 грн — безкоштовно</span><svg class="i"><use href="#i-fish"/></svg>
+      <span>Відправка по Україні в термопакуванні з охолоджувачами</span><svg class="i"><use href="#i-fish"/></svg>
+      <span>Приймаємо замовлення в Direct</span><svg class="i"><use href="#i-fish"/></svg>
+    </div>
+  </div>
+</div>
+
+<header class="hdr">
+  <div class="wrap hdr__in">
+    <button class="icon-btn" id="menuBtn" data-menu="open" aria-label="Меню" aria-expanded="false" aria-controls="nav"><svg class="i"><use href="#i-menu"/></svg></button>
+    <a class="logo" href="index.html" aria-label="Fish Family — головна"><svg><use href="#i-logo"/></svg><span class="logo__txt">fish<b>family</b></span></a>
+    <nav class="hdr__nav" aria-label="Розділи">
+      <a href="katalog.html">Каталог</a>
+      <a href="katalog.html?cat=ryba">Риба</a>
+      <a href="katalog.html?cat=more">Морепродукти</a>
+      <a href="dostavka.html">Доставка</a>
+      <a href="kontakty.html">Контакти</a>
+    </nav>
+    <div class="hdr__act">
+      <a class="icon-btn ig-link" href="https://www.instagram.com/fishfamily.dp/" target="_blank" rel="noopener" aria-label="Instagram @fishfamily.dp"><svg class="i"><use href="#i-ig"/></svg></a>
+      <a class="icon-btn" href="koshyk.html" aria-label="Кошик"><svg class="i"><use href="#i-cart"/></svg><span class="cart-count" data-cart-count hidden>0</span></a>
+    </div>
+  </div>
+</header>
+
+<div class="nav" id="nav" aria-hidden="true">
+  <div class="nav__top">
+    <a class="logo" href="index.html"><svg><use href="#i-logo"/></svg><span class="logo__txt">fish<b>family</b></span></a>
+    <button class="icon-btn" data-menu="close" aria-label="Закрити меню"><svg class="i"><use href="#i-close"/></svg></button>
+  </div>
+  <div class="nav__links">
+    <a href="index.html" data-menu="close">Головна <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="katalog.html" data-menu="close">Каталог <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="katalog.html?cat=ryba" data-menu="close">Риба <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="katalog.html?cat=more" data-menu="close">Морепродукти <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="katalog.html?cat=bakaliia" data-menu="close">Сири й бакалія <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="dostavka.html" data-menu="close">Доставка й оплата <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="kontakty.html" data-menu="close">Контакти <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="koshyk.html" data-menu="close">Кошик <svg class="i"><use href="#i-arrow"/></svg></a>
+  </div>
+  <div class="nav__foot">
+    <p>Найближча поставка: <b data-friday>пʼятниця</b></p>
+    <a class="btn btn--main btn--block" href="https://ig.me/m/fishfamily.dp" target="_blank" rel="noopener"><svg class="i"><use href="#i-ig"/></svg>Написати в Direct</a>
+  </div>
+</div>
+
+<main id="top">
+<div class="wrap crumbs"><a href="index.html">Головна</a> › <span>Кошик</span></div>
+
+<section class="wrap cartpage">
+  <div class="page-head">
+    <h1>Кошик</h1>
+    <p>Оформіть замовлення — ми звʼяжемося з вами, щоб підтвердити наявність і точну суму.</p>
+  </div>
+
+  <div class="cart__empty" id="cartEmpty" hidden>
+    <p>Кошик поки порожній</p>
+    <a class="btn btn--main" href="katalog.html">До каталогу</a>
+  </div>
+
+  <div class="done" id="orderDone" hidden>
+    <span class="done__ico"><svg class="i"><use href="#i-check"/></svg></span>
+    <h2>Дякуємо! Замовлення <span id="doneId"></span> прийняте</h2>
+    <p>Ми звʼяжемося з вами найближчим часом, щоб підтвердити наявність і точну суму. Найближча поставка — <b data-friday>пʼятниця</b>.</p>
+    <a class="btn btn--main" href="index.html">На головну</a>
+  </div>
+
+  <div class="cartgrid" id="cartFilled" hidden>
+    <div class="cartmain">
+      <ul class="citems" id="cartList"></ul>
+
+      <h2 class="h3">Доставка</h2>
+      <div class="pills">
+          <button type="button" class="pill on" data-zone-pick="dnipro" aria-pressed="true">Дніпро</button>
+          <button type="button" class="pill" data-zone-pick="ukraine" aria-pressed="false">По Україні</button>
+        </div>
+
+      <h2 class="h3">Контакти</h2>
+      <div class="fields">
+        <label class="field"><span>Імʼя</span><input id="fName" data-f autocomplete="name"></label>
+        <label class="field"><span>Телефон</span><input id="fPhone" data-f type="tel" inputmode="tel" autocomplete="tel" placeholder="+380"></label>
+        <label class="field field--wide" data-zone="dnipro"><span>Адреса доставки</span><input id="fAddr" data-f autocomplete="street-address" placeholder="Вулиця, будинок, квартира"></label>
+        <div class="field field--wide field--ac" data-zone="ukraine" hidden>
+          <label for="fCity">Місто</label>
+          <input id="fCity" data-f autocomplete="off" placeholder="Почніть вводити назву" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fCityList">
+          <ul class="ac" id="fCityList" role="listbox" hidden></ul>
+        </div>
+        <div class="field field--wide field--ac" data-zone="ukraine" hidden>
+          <label for="fBranch">Відділення або поштомат Нової Пошти</label>
+          <input id="fBranch" data-f autocomplete="off" placeholder="Номер або адреса відділення" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fBranchList">
+          <ul class="ac" id="fBranchList" role="listbox" hidden></ul>
+        </div>
+        <label class="field field--wide"><span>Коментар</span><textarea id="fNote" data-f rows="2"></textarea></label>
+        <input class="hp" id="fWebsite" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      </div>
+    </div>
+
+    <aside class="cartside">
+      <h2 class="h3">Разом</h2>
+      <div class="sum">
+        <div><span>Товари</span><span id="sumGoods">0 грн</span></div>
+        <div><span id="sumFeeName">Доставка</span><span id="sumFee">—</span></div>
+        <div class="total"><span>Разом</span><span id="sumTotal">0 грн</span></div>
+        <small id="sumNote" hidden></small>
+      </div>
+      <p class="warn" id="cartWarn" hidden></p>
+      <button type="button" class="btn btn--main btn--block" id="cartSend" data-act="send"><svg class="i"><use href="#i-check"/></svg><span id="cartSendTxt">Оформити замовлення</span></button>
+      <p class="cart__hint">Замовлення одразу надходить нам — ми звʼяжемося з вами для підтвердження.</p>
+      <p class="warn is-min" id="sendError" hidden>Не вдалося надіслати замовлення. Перевірте інтернет і спробуйте ще раз.</p>
+    </aside>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__grid">
+      <div>
+        <a class="logo" href="index.html"><svg><use href="#i-logo"/></svg><span class="logo__txt">fish<b>family</b></span></a>
+        <p>Охолоджений лосось з Норвегії щопʼятниці та відбірні морепродукти світу. Дніпро, відправки Новою Поштою по Україні.</p>
+      </div>
+      <div>
+        <h4>Каталог</h4>
+        <ul>
+          <li><a href="katalog.html?cat=ryba">Риба</a></li>
+          <li><a href="katalog.html?cat=more">Морепродукти</a></li>
+          <li><a href="katalog.html?cat=bakaliia">Сири й бакалія</a></li>
+          <li><a href="tovar.html?id=losos">Філе лосося</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Покупцям</h4>
+        <ul>
+          <li><a href="dostavka.html">Доставка й оплата</a></li>
+          <li><a href="dostavka.html#pytannia">Питання</a></li>
+          <li><a href="koshyk.html">Кошик</a></li>
+          <li><a href="kontakty.html">Контакти</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Звʼязок</h4>
+        <ul>
+          <li><a href="https://ig.me/m/fishfamily.dp" target="_blank" rel="noopener">Написати в Direct</a></li>
+          <li><a href="https://www.instagram.com/fishfamily.dp/" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="https://www.threads.com/@fishfamily.dp" target="_blank" rel="noopener">Threads</a></li>
+          <li>Дніпро, Україна</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot__bottom">
+      <span>© 2026 Fish Family</span>
+      <span>Ціни на сайті — ціни тижня. Остаточну суму підтвердимо в Direct.</span>
+    </div>
+  </div>
+</footer>
+
+<a class="cartf" href="koshyk.html" aria-label="Кошик"><svg class="i"><use href="#i-cart"/></svg><span class="cartf__count" data-cart-count hidden>0</span></a>
+<a class="tg" id="tgFloat" href="https://t.me/" target="_blank" rel="noopener" aria-label="Написати в Telegram — ми онлайн">
+  <span class="tg__label"><i></i>Ми онлайн</span>
+  <span class="tg__icon"><svg viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r="120" fill="#2AABEE"/><path fill="#fff" d="M54.4 118.7c35-15.2 58.3-25.3 70-30.2 33.3-13.9 40.3-16.3 44.8-16.4 1 0 3.2.2 4.7 1.4 1.2 1 1.5 2.3 1.7 3.3.2 1 .4 3.1.2 4.7-1.8 19-9.6 65.1-13.6 86.3-1.7 9-5 12-8.2 12.3-7 .6-12.3-4.6-19-9-10.6-6.9-16.5-11.2-26.8-18-11.9-7.8-4.2-12.1 2.6-19.1 1.8-1.8 32.5-29.8 33.1-32.3.1-.3.1-1.5-.6-2.1-.7-.6-1.7-.4-2.5-.2-1.1.2-17.9 11.4-50.6 33.5-4.8 3.3-9.1 4.9-13 4.8-4.3-.1-12.5-2.4-18.7-4.4-7.5-2.4-13.5-3.7-13-7.9.3-2.2 3.3-4.4 8.9-6.7z"/></svg></span>
+</a>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

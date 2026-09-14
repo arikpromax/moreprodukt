@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fish Family — охолоджений лосось з Норвегії, Дніпро</title>
+<meta name="description" content="Охолоджений лосось з Норвегії щопʼятниці та відбірні морепродукти. Доставка по Дніпру від 1500 грн безкоштовно, відправка Новою Поштою по Україні.">
+<meta name="theme-color" content="#0E2233">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans+Extra+Condensed:wght@600;700;800;900&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="home">
+<script src="sprite.js"></script>
+
+<div class="ticker" aria-label="Умови магазину">
+  <div class="ticker__track">
+    <div class="ticker__group">
+      <span>Свіжа поставка лосося щопʼятниці</span><svg class="i"><use href="#i-fish"/></svg>
+      <span>Дніпро: доставка від 1 500 грн — безкоштовно</span><svg class="i"><use href="#i-fish"/></svg>
+      <span>Відправка по Україні в термопакуванні з охолоджувачами</span><svg class="i"><use href="#i-fish"/></svg>
+      <span>Приймаємо замовлення в Direct</span><svg class="i"><use href="#i-fish"/></svg>
+    </div>
+  </div>
+</div>
+
+<header class="hdr">
+  <div class="wrap hdr__in">
+    <button class="icon-btn" id="menuBtn" data-menu="open" aria-label="Меню" aria-expanded="false" aria-controls="nav"><svg class="i"><use href="#i-menu"/></svg></button>
+    <a class="logo" href="index.html" aria-label="Fish Family — головна"><svg><use href="#i-logo"/></svg><span class="logo__txt">fish<b>family</b></span></a>
+    <nav class="hdr__nav" aria-label="Розділи">
+      <a href="katalog.html">Каталог</a>
+      <a href="katalog.html?cat=ryba">Риба</a>
+      <a href="katalog.html?cat=more">Морепродукти</a>
+      <a href="dostavka.html">Доставка</a>
+      <a href="kontakty.html">Контакти</a>
+    </nav>
+    <div class="hdr__act">
+      <a class="icon-btn ig-link" href="https://www.instagram.com/fishfamily.dp/" target="_blank" rel="noopener" aria-label="Instagram @fishfamily.dp"><svg class="i"><use href="#i-ig"/></svg></a>
+      <a class="icon-btn" href="koshyk.html" aria-label="Кошик"><svg class="i"><use href="#i-cart"/></svg><span class="cart-count" data-cart-count hidden>0</span></a>
+    </div>
+  </div>
+</header>
+
+<div class="nav" id="nav" aria-hidden="true">
+  <div class="nav__top">
+    <a class="logo" href="index.html"><svg><use href="#i-logo"/></svg><span class="logo__txt">fish<b>family</b></span></a>
+    <button class="icon-btn" data-menu="close" aria-label="Закрити меню"><svg class="i"><use href="#i-close"/></svg></button>
+  </div>
+  <div class="nav__links">
+    <a href="index.html" data-menu="close">Головна <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="katalog.html" data-menu="close">Каталог <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="katalog.html?cat=ryba" data-menu="close">Риба <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="katalog.html?cat=more" data-menu="close">Морепродукти <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="katalog.html?cat=bakaliia" data-menu="close">Сири й бакалія <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="dostavka.html" data-menu="close">Доставка й оплата <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="kontakty.html" data-menu="close">Контакти <svg class="i"><use href="#i-arrow"/></svg></a>
+    <a href="koshyk.html" data-menu="close">Кошик <svg class="i"><use href="#i-arrow"/></svg></a>
+  </div>
+  <div class="nav__foot">
+    <p>Найближча поставка: <b data-friday>пʼятниця</b></p>
+    <a class="btn btn--main btn--block" href="https://ig.me/m/fishfamily.dp" target="_blank" rel="noopener"><svg class="i"><use href="#i-ig"/></svg>Написати в Direct</a>
+  </div>
+</div>
+
+<main id="top">
+<section class="hero">
+  <img class="hero__photo" src="img/hero-hd.jpg" alt="" fetchpriority="high" onerror="this.hidden=true">
+  <div class="hero__water" aria-hidden="true"></div>
+  <div class="wrap hero__in">
+    <h1>Охолоджений лосось з Норвегії та морепродукти <em>щопʼятниці</em></h1>
+    <div class="hero__box">
+      <p>Ціна тижня на філе лосося — <b><span data-price-of="losos">1 168</span> грн/кг</b>. Доставка по Дніпру <b>до дверей</b> і по всій Україні в термопакуванні з охолоджувачами <svg class="i hero__snow"><use href="#i-snow"/></svg></p>
+    </div>
+    <a class="hero__btn" href="katalog.html">Зробити замовлення<span><svg class="i"><use href="#i-cart"/></svg></span></a>
+  </div>
+</section>
+
+<section class="sec sec--navy">
+  <div class="wrap">
+    <div class="sec__head">
+      <div><span class="eyebrow">Ціни тижня</span><h2>На вітрині цього тижня</h2></div>
+      <a class="btn btn--gold" href="katalog.html">Всі продукти <svg class="i"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="grid" id="homeGrid"></div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="sec__head">
+      <div><span class="eyebrow">Риба й морепродукти</span><h2>Пошук за категоріями</h2></div>
+      <a class="more" href="katalog.html">Усі товари <svg class="i"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="cats">
+      <a class="cat cat--fish" href="katalog.html?cat=ryba"><b>Риба</b><span><em data-cat-count="ryba"></em><svg class="i"><use href="#i-arrow"/></svg></span></a>
+      <a class="cat" href="katalog.html?cat=more"><b>Морепродукти</b><span><em data-cat-count="more"></em><svg class="i"><use href="#i-arrow"/></svg></span></a>
+      <a class="cat" href="katalog.html?cat=bakaliia"><b>Сири й бакалія</b><span><em data-cat-count="bakaliia"></em><svg class="i"><use href="#i-arrow"/></svg></span></a>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec--ice">
+  <div class="wrap">
+    <div class="sec__head">
+      <div><span class="eyebrow">Від Норвегії до вашого столу</span><h2>Більше, ніж просто риба</h2></div>
+    </div>
+    <div class="perks4">
+      <div class="perk4"><span class="sq"><svg class="i"><use href="#i-snow"/></svg></span><h3>Без заморозки</h3><p>Охолоджене філе без стороннього запаху — не тече й не «розповзається».</p></div>
+      <div class="perk4"><span class="sq"><svg class="i"><use href="#i-box"/></svg></span><h3>У вакуумі</h3><p>Філе 1,5–2 кг готове до засолу, гриля, суші чи бутерброда.</p></div>
+      <div class="perk4"><span class="sq"><svg class="i"><use href="#i-truck"/></svg></span><h3>Термопакування</h3><p>Пакуємо з охолоджувачами — рибка доїжджає свіжою будь-де по Україні.</p></div>
+      <div class="perk4"><span class="sq"><svg class="i"><use href="#i-cal"/></svg></span><h3>Щопʼятниці</h3><p>Свіжа поставка й адресна доставка по Дніпру. Від 1 500 грн — безкоштовно.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="week">
+  <div class="wrap week__in">
+    <div><span class="eyebrow">Графік поставки</span><h2>Свіжа партія приходить щопʼятниці</h2></div>
+    <div>
+      <ol class="days" id="days"></ol>
+      <p class="days__legend" id="daysLegend"></p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="vidhuky">
+  <div class="wrap">
+    <div class="sec__head">
+      <div><span class="eyebrow">Галерея · відгуки · рецепти</span><h2>Будьте з нами в Instagram</h2></div>
+      <a class="more" href="https://www.instagram.com/fishfamily.dp/" target="_blank" rel="noopener">@fishfamily.dp <svg class="i"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="revs">
+      <figure class="ph ph--sea"></figure>
+      <figure class="ph ph--sea"></figure>
+      <figure class="ph ph--sea"></figure>
+    </div>
+    <a class="btn btn--dark revs__more" href="https://www.instagram.com/stories/highlights/17978755244148995/" target="_blank" rel="noopener"><svg class="i"><use href="#i-ig"/></svg>Відгуки клієнтів</a>
+  </div>
+</section>
+
+<section class="sec sec--ice" id="pytannia">
+  <div class="wrap faqwrap">
+    <div class="faqwrap__head">
+      <span class="eyebrow">Питання й відповіді</span>
+      <h2>Все ще маєте питання?</h2>
+      <p>Напишіть нам — відповімо особисто.</p>
+      <a class="btn btn--ghost" href="https://ig.me/m/fishfamily.dp" target="_blank" rel="noopener"><svg class="i"><use href="#i-ig"/></svg>Запитати в Direct</a>
+    </div>
+    <div class="faq">
+      <details open>
+        <summary>Чи доїде лосось свіжим?<span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></summary>
+        <p>Так. Пакуємо в надійне термопакування з охолоджувачами з урахуванням терморежиму — рибка доїжджає будь-де по Україні. Головне — забрати посилку в день прибуття.</p>
+      </details>
+      <details>
+        <summary>Коли можна отримати замовлення?<span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></summary>
+        <p>Свіжа партія приходить щопʼятниці. Замовлення формуємо заздалегідь — напишіть нам, і ми додамо вас до найближчої поставки.</p>
+      </details>
+      <details>
+        <summary>Чому ціна лосося вказана за кілограм?<span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></summary>
+        <p>Філе продається цілим, а вага кожного трохи різна — від 1,5 до 2 кг. Ціна тижня оновлюється з кожною поставкою, остаточну суму називаємо після зважування.</p>
+      </details>
+      <details>
+        <summary>Як оплатити?<span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></summary>
+        <p>По Дніпру — за реквізитами ФОП або готівкою при отриманні. По Україні — 100% передоплата за реквізитами ФОП.</p>
+      </details>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__grid">
+      <div>
+        <a class="logo" href="index.html"><svg><use href="#i-logo"/></svg><span class="logo__txt">fish<b>family</b></span></a>
+        <p>Охолоджений лосось з Норвегії щопʼятниці та відбірні морепродукти світу. Дніпро, відправки Новою Поштою по Україні.</p>
+      </div>
+      <div>
+        <h4>Каталог</h4>
+        <ul>
+          <li><a href="katalog.html?cat=ryba">Риба</a></li>
+          <li><a href="katalog.html?cat=more">Морепродукти</a></li>
+          <li><a href="katalog.html?cat=bakaliia">Сири й бакалія</a></li>
+          <li><a href="tovar.html?id=losos">Філе лосося</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Покупцям</h4>
+        <ul>
+          <li><a href="dostavka.html">Доставка й оплата</a></li>
+          <li><a href="dostavka.html#pytannia">Питання</a></li>
+          <li><a href="koshyk.html">Кошик</a></li>
+          <li><a href="kontakty.html">Контакти</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Звʼязок</h4>
+        <ul>
+          <li><a href="https://ig.me/m/fishfamily.dp" target="_blank" rel="noopener">Написати в Direct</a></li>
+          <li><a href="https://www.instagram.com/fishfamily.dp/" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="https://www.threads.com/@fishfamily.dp" target="_blank" rel="noopener">Threads</a></li>
+          <li>Дніпро, Україна</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot__bottom">
+      <span>© 2026 Fish Family</span>
+      <span>Ціни на сайті — ціни тижня. Остаточну суму підтвердимо в Direct.</span>
+    </div>
+  </div>
+</footer>
+
+<a class="cartf" href="koshyk.html" aria-label="Кошик"><svg class="i"><use href="#i-cart"/></svg><span class="cartf__count" data-cart-count hidden>0</span></a>
+<a class="tg" id="tgFloat" href="https://t.me/" target="_blank" rel="noopener" aria-label="Написати в Telegram — ми онлайн">
+  <span class="tg__label"><i></i>Ми онлайн</span>
+  <span class="tg__icon"><svg viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r="120" fill="#2AABEE"/><path fill="#fff" d="M54.4 118.7c35-15.2 58.3-25.3 70-30.2 33.3-13.9 40.3-16.3 44.8-16.4 1 0 3.2.2 4.7 1.4 1.2 1 1.5 2.3 1.7 3.3.2 1 .4 3.1.2 4.7-1.8 19-9.6 65.1-13.6 86.3-1.7 9-5 12-8.2 12.3-7 .6-12.3-4.6-19-9-10.6-6.9-16.5-11.2-26.8-18-11.9-7.8-4.2-12.1 2.6-19.1 1.8-1.8 32.5-29.8 33.1-32.3.1-.3.1-1.5-.6-2.1-.7-.6-1.7-.4-2.5-.2-1.1.2-17.9 11.4-50.6 33.5-4.8 3.3-9.1 4.9-13 4.8-4.3-.1-12.5-2.4-18.7-4.4-7.5-2.4-13.5-3.7-13-7.9.3-2.2 3.3-4.4 8.9-6.7z"/></svg></span>
+</a>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
